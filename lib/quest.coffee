@@ -24,7 +24,8 @@ handle =
     cookie_string = _(options.jar.getCookies options).map((c) -> c.toValueString()).join '; '
     options.headers.cookie = if not options.headers.cookie? then '' else "#{options.headeers.cookie}; "
     options.headers.cookie = "#{options.headers.cookie}#{cookie_string}"
-handle_options = (options) -> _(handle).chain().values().map (handler) -> handler options
+handler_plugins = {}
+handle_options = (handlers, options) -> _(handlers).chain().values().map (handler) -> handler options
 
 is_uri = (uri) -> /^https?:\/\//.test uri
 normalize_uri = (options) -> options.uri = "http://#{options.uri}" if not is_uri options.uri
@@ -59,7 +60,8 @@ quest = (options, cb) ->
   _(options).extend parsed_uri
   _(options.headers).defaults
     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_3) AppleWebKit/537.16 (KHTML, like Gecko) Chrome/24.0.1297.0 Safari/537.16'
-  handle_options options
+  handle_options(handle, options)
+  handle_options(handler_plugins, options) 
   if options.body?
     options.body = new Buffer options.body
     options.headers['content-length'] = options.body.length
@@ -106,6 +108,10 @@ quest = (options, cb) ->
       return cb err, resp, body
   req.write options.body if options.body?
   req.end()
+
+# Allow attaching request handlers
+quest.use = (plugin) ->
+   _(handler_plugins).extend(plugin.handlers)
 
 # Make our jar support the same interface as request's
 quest.jar = () ->

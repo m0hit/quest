@@ -111,6 +111,7 @@ quest = (options, cb) ->
 
 # Allow attaching request handlers
 quest.use = (plugin) ->
+   raise Error('Plugin must define handlers') if not plugin.handlers?
    _(handler_plugins).extend(plugin.handlers)
 
 # Make our jar support the same interface as request's
